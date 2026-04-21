@@ -1,0 +1,25 @@
+[loader]
+argv = [ "python3", "simulate_attacks.py",]
+
+[sgx]
+edmm_enable = 1
+enclave_size = "512M"
+max_threads = 4
+trusted_files = []
+thread_num = 4
+isvprodid = 0
+isvsvn = 0
+remote_attestation = "none"
+debug = false
+require_avx = false
+require_avx512 = false
+require_mpx = false
+require_pkru = false
+require_amx = false
+support_exinfo = false
+nonpie_binary = false
+enable_stats = false
+
+[loader.env]
+LD_LIBRARY_PATH = "/usr/local/lib:/usr/lib/x86_64-linux-gnu/gramine/runtime/glibc"
+PYTHONPATH = "/home/azureuser/threatshield-project"

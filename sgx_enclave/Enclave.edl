@@ -1,0 +1,8 @@
+enclave {
+    trusted {
+        public int run_pqc_test([out, size=256] char* result);
+    };
+    untrusted {
+        void print_output([in, string] const char* str);
+    };
+};

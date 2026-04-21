@@ -1,0 +1,210 @@
+# ThreatShield Helm Chart Values
+
+# Global configuration
+global:
+  environment: production
+  domain: threatshield.yourdomain.com
+  registry: your-registry.io
+  imageTag: latest
+  
+# Backend configuration
+backend:
+  replicaCount: 3
+  image:
+    repository: threatshield/backend
+    tag: latest
+    pullPolicy: Always
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  service:
+    type: ClusterIP
+    port: 8000
+    websocketPort: 8001
+  ingress:
+    enabled: true
+    path: /api
+  env:
+    DATABASE_URL: "postgresql://threatshield:${POSTGRES_PASSWORD}@postgres:5432/threatshield"
+    REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379/0"
+    ENVIRONMENT: "production"
+    LOG_LEVEL: "INFO"
+  
+# Frontend configuration
+frontend:
+  replicaCount: 2
+  image:
+    repository: threatshield/frontend
+    tag: latest
+    pullPolicy: Always
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "1000m"
+  service:
+    type: LoadBalancer
+    port: 80
+  ingress:
+    enabled: true
+    path: /
+  env:
+    REACT_APP_API_URL: "https://${global.domain}/api"
+    REACT_APP_WS_URL: "wss://${global.domain}/ws"
+  
+# Database configuration
+postgres:
+  enabled: true
+  image:
+    repository: postgres
+    tag: "15-alpine"
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+  persistence:
+    enabled: true
+    size: 20Gi
+    storageClass: "standard"
+  auth:
+    database: "threatshield"
+    username: "threatshield"
+    password: "${POSTGRES_PASSWORD}"
+  
+# Redis configuration
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: "7-alpine"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "1000m"
+  auth:
+    enabled: true
+    password: "${REDIS_PASSWORD}"
+  
+# Monitoring configuration
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+  grafana:
+    enabled: true
+    adminPassword: "${GRAFANA_PASSWORD}"
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "250m"
+  
+# Storage configuration
+storage:
+  models:
+    enabled: true
+    size: 10Gi
+    storageClass: "standard"
+  keys:
+    enabled: true
+    size: 5Gi
+    storageClass: "standard"
+  logs:
+    enabled: true
+    size: 20Gi
+    storageClass: "standard"
+  
+# Security configuration
+security:
+  serviceAccount:
+    create: true
+    name: threatshield-sa
+  psp:
+    enabled: true
+  networkPolicies:
+    enabled: true
+  
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: ${global.domain}
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: frontend
+              port:
+                number: 80
+        - path: /api
+          pathType: Prefix
+          backend:
+            service:
+              name: backend
+              port:
+                number: 8000
+        - path: /ws
+          pathType: Prefix
+          backend:
+            service:
+              name: backend
+              port:
+                number: 8001
+  tls:
+    - hosts:
+        - ${global.domain}
+      secretName: threatshield-tls
+  
+# Cert-manager configuration (if using)
+certManager:
+  enabled: true
+  issuer:
+    email: admin@threatshield.ai
+    server: https://acme-v02.api.letsencrypt.org/directory
+  
+# External dependencies
+external:
+  misp:
+    enabled: false
+    url: ""
+    apiKey: ""
+  virustotal:
+    enabled: false
+    apiKey: ""
+  etherscan:
+    enabled: false
+    apiKey: ""
+  moralis:
+    enabled: false
+    apiKey: ""
+  alchemy:
+    enabled: false
+    apiKey: ""

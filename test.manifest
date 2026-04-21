@@ -1,0 +1,22 @@
+loader.entrypoint = "file:/usr/bin/python3"
+loader.argv = ["test_sgx.py"]
+loader.env.LD_LIBRARY_PATH = "/usr/local/lib:/usr/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu"
+
+sgx.enclave_size = "256M"
+sgx.thread_num = 4
+sgx.isvprodid = 0
+sgx.isvsvn = 0
+sgx.remote_attestation = "none"
+
+fs.mounts = [
+    { path = "/lib", uri = "/lib" },
+    { path = "/lib64", uri = "/lib64" },
+    { path = "/usr/lib", uri = "/usr/lib" },
+    { path = "/usr/lib/x86_64-linux-gnu", uri = "/usr/lib/x86_64-linux-gnu" },
+    { path = "/usr/local/lib", uri = "/usr/local/lib" },
+]
+
+sgx.trusted_files = [
+    "file:/usr/bin/python3",
+    "file:test_sgx.py",
+]

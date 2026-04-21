@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: threatshield-backend
+  namespace: threatshield
+  labels:
+    app: threatshield
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    name: http
+    protocol: TCP
+  - port: 8001
+    targetPort: 8001
+    name: websocket
+    protocol: TCP
+  selector:
+    app: threatshield
+    component: backend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: threatshield-frontend
+  namespace: threatshield
+  labels:
+    app: threatshield
+    component: frontend
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+    name: http
+    protocol: TCP
+  - port: 443
+    targetPort: 443
+    name: https
+    protocol: TCP
+  selector:
+    app: threatshield
+    component: frontend
+  externalTrafficPolicy: Local
+  loadBalancerIP: ""
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: threatshield
+spec:
+  ports:
+  - port: 6379
+    targetPort: 6379
+  selector:
+    app: threatshield
+    component: backend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: threatshield
+spec:
+  ports:
+  - port: 5432
+    targetPort: 5432
+  selector:
+    app: threatshield
+    component: backend

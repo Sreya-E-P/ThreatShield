@@ -1,0 +1,22 @@
+# Loader configuration
+loader.entrypoint = "file:/usr/bin/python3"
+loader.argv = ["python3", "simulate_attacks.py"]
+
+# SGX configuration
+sgx.enclave_size = "512M"
+sgx.max_threads = 4
+sgx.isvprodid = 0
+sgx.isvsvn = 0
+sgx.remote_attestation = "none"
+
+# Filesystem mounts
+fs.mounts = [
+    { path = "/lib", uri = "file:/lib" },
+    { path = "/usr/lib", uri = "file:/usr/lib" },
+]
+
+# Trusted files
+sgx.trusted_files = [
+    "file:/usr/bin/python3",
+    "file:simulate_attacks.py",
+]

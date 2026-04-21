@@ -1,0 +1,21 @@
+FROM gramineproject/gramine:latest
+
+WORKDIR /app
+COPY . /app/
+
+# Create manifest for Python script
+RUN echo 'loader.entrypoint = "file:/usr/bin/python3"' > python.manifest && \
+    echo 'loader.argv = ["python3", "/app/simulate_attacks.py"]' >> python.manifest && \
+    echo 'sgx.enclave_size = "512M"' >> python.manifest && \
+    echo 'sgx.thread_num = 4' >> python.manifest && \
+    echo 'sgx.isvprodid = 0' >> python.manifest && \
+    echo 'sgx.isvsvn = 0' >> python.manifest && \
+    echo 'sgx.remote_attestation = "none"' >> python.manifest && \
+    echo 'fs.mounts = [ { path = "/lib", uri = "/lib" }, { path = "/usr/lib", uri = "/usr/lib" } ]' >> python.manifest && \
+    echo 'sgx.trusted_files = [ "file:/usr/bin/python3", "file:/app/simulate_attacks.py" ]' >> python.manifest
+
+# Generate and sign the enclave
+RUN gramine-manifest python.manifest python.manifest.sgx && \
+    gramine-sgx-sign --manifest python.manifest --output python.manifest.sgx || true
+
+CMD ["gramine-sgx", "/app/python.manifest"]

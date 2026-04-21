@@ -1,0 +1,143 @@
+# kubernetes/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: threatshield-backend
+  namespace: threatshield
+  labels:
+    app: threatshield
+    component: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: threatshield
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: threatshield
+        component: backend
+      annotations:
+        sidecar.istio.io/inject: "true"
+    spec:
+      serviceAccountName: threatshield-sa
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsNonRoot: true
+      containers:
+      - name: backend
+        image: threatshield/backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: AZURE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: azure-credentials
+              key: client-id
+        - name: AZURE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: azure-credentials
+              key: client-secret
+        - name: AZURE_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: azure-credentials
+              key: tenant-id
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+            ephemeral-storage: "1Gi"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
+            ephemeral-storage: "2Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: sgx-device
+          mountPath: /dev/sgx
+          readOnly: true
+        - name: models-volume
+          mountPath: /app/models
+          readOnly: true
+      volumes:
+      - name: sgx-device
+        hostPath:
+          path: /dev/sgx
+      - name: models-volume
+        configMap:
+          name: threatshield-models
+      nodeSelector:
+        kubernetes.azure.com/accelerator: "sgx"
+        threatshield/confidential-compute: "true"
+      tolerations:
+      - key: "confidential-compute"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: threatshield-backend
+  namespace: threatshield
+spec:
+  selector:
+    app: threatshield
+    component: backend
+  ports:
+  - port: 80
+    targetPort: 8000
+    name: http
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: threatshield-backend-hpa
+  namespace: threatshield
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: threatshield-backend
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

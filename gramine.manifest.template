@@ -1,0 +1,8 @@
+loader.env.LD_LIBRARY_PATH = "/usr/local/lib:{{ gramine.runtimedir() }}"
+loader.argv = ["python3", "simulate_attacks.py"]
+
+sgx.edmm_enable = 1
+sgx.enclave_size = "512M"
+sgx.max_threads = 4
+
+loader.env.PYTHONPATH = "{{ source_dir }}"

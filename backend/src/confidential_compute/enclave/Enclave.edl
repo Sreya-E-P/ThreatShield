@@ -1,0 +1,78 @@
+// backend/src/confidential_compute/enclave/enclave.edl
+enclave {
+    // Import standard SGX EDL
+    from "sgx_tstd.edl" import *;
+    
+    // Define the enclave's trusted functions (ECALLs)
+    trusted {
+        // Generate hybrid PQC + ECDH keypair
+        public sgx_status_t ecall_generate_hybrid_keypair(
+            [out, size=public_len] uint8_t* public_key,
+            size_t public_len
+        );
+        
+        // Hybrid encryption
+        public sgx_status_t ecall_hybrid_encrypt(
+            [in, size=plain_len] const uint8_t* plaintext,
+            size_t plain_len,
+            [out, size=cipher_len] uint8_t* ciphertext,
+            size_t cipher_len
+        );
+        
+        // Hybrid decryption
+        public sgx_status_t ecall_hybrid_decrypt(
+            [in, size=cipher_len] const uint8_t* ciphertext,
+            size_t cipher_len,
+            [out, size=plain_len] uint8_t* plaintext,
+            size_t plain_len
+        );
+        
+        // Sign message with hybrid signature
+        public sgx_status_t ecall_sign_message(
+            [in, size=message_len] const uint8_t* message,
+            size_t message_len,
+            [out, size=sig_len] uint8_t* signature,
+            size_t sig_len
+        );
+        
+        // Get enclave measurement
+        public sgx_status_t ecall_get_enclave_info(
+            [out] sgx_measurement_t* mr_enclave,
+            [out] sgx_measurement_t* mr_signer
+        );
+    };
+    
+    // Define untrusted functions (OCALLs) that enclave can call
+    untrusted {
+        // Print to host
+        void ocall_print([in, string] const char* str);
+        
+        // Get current time
+        void ocall_get_time([out] uint64_t* current_time);
+        
+        // Network request (for external key verification, etc.)
+        sgx_status_t ocall_network_request(
+            [in, string] const char* url,
+            [in, size=req_len] const uint8_t* request,
+            size_t req_len,
+            [out, size=resp_len] uint8_t* response,
+            size_t resp_len,
+            [out] size_t* actual_resp_len
+        );
+        
+        // Store data outside enclave
+        sgx_status_t ocall_store_data(
+            [in, string] const char* key,
+            [in, size=data_len] const uint8_t* data,
+            size_t data_len
+        );
+        
+        // Retrieve data from outside enclave
+        sgx_status_t ocall_retrieve_data(
+            [in, string] const char* key,
+            [out, size=data_len] uint8_t* data,
+            size_t data_len,
+            [out] size_t* actual_data_len
+        );
+    };
+};

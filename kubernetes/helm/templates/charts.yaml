@@ -1,0 +1,19 @@
+apiVersion: v2
+name: threatshield
+description: Production-ready cyber defense platform with 5 research contributions
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - cybersecurity
+  - ai
+  - blockchain
+  - cryptography
+  - threat-intelligence
+home: https://threatshield.ai
+sources:
+  - https://github.com/threatshield/platform
+maintainers:
+  - name: ThreatShield Team
+    email: contact@threatshield.ai
+icon: https://threatshield.ai/icon.png

@@ -1,0 +1,25 @@
+name = "threatshield-backend"
+version = "1.0.0"
+
+python_application = "src.api.main:app"
+healthcheck_endpoint = "/health"
+tests_cmd = "pytest tests/"
+tests_requirements = ["requirements.txt"]
+
+[web]
+host = "0.0.0.0"
+port = 8000
+workers = 2
+
+[web.startup]
+command = "python3"
+args = ["-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+[sgx]
+enabled = true
+heap_size = "512M"
+thread_pool_size = 8
+
+[attestation]
+provider = "azure"
+url = "https://threatshieldattestation.eus.attest.azure.net"

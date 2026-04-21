@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+*.so
+*.dll
+*.exe
+
+# Node modules
+node_modules/
+npm-debug.log
+
+# Build outputs
+build/
+dist/
+*.log
+
+# Environment files (contains API keys!)
+.env
+secrets.json
+*.token
+*.sig
+*.pem
+
+# Large files
+*.pt
+*.pth
+*.tar
+*.gz
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+*.tmp
+*.bak
+*.backup
+*.manifest.sgx
